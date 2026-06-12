@@ -1,11 +1,12 @@
+using H2V.ExtensionsCore.Common;
+using H2V.ExtensionsCore.Helper;
 using H2V.GameplayAbilitySystem.AbilitySystem.Components;
 using H2V.GameplayAbilitySystem.AttributeSystem.Components;
-using H2V.ExtensionsCore.Common;
+using H2V.GameplayAbilitySystem.CueSystem;
 using H2V.GameplayAbilitySystem.EffectSystem;
 using H2V.GameplayAbilitySystem.EffectSystem.Components;
-using UnityEngine;
 using H2V.GameplayAbilitySystem.TagSystem;
-using H2V.ExtensionsCore.Helper;
+using UnityEngine;
 
 namespace H2V.GameplayAbilitySystem.Components
 {
@@ -19,6 +20,8 @@ namespace H2V.GameplayAbilitySystem.Components
     /// </summary>
     [RequireComponent(typeof(AbilitySystemBehaviour))]
     [RequireComponent(typeof(EffectSystemBehaviour))]
+    [RequireComponent(typeof(TagSystemBehaviour))]
+    [RequireComponent(typeof(GameplayCueManager))]
     [RequireComponent(typeof(AttributeSystemBehaviour))]
     public class AbilitySystemComponent : MonoBehaviour
     {
@@ -26,6 +29,8 @@ namespace H2V.GameplayAbilitySystem.Components
         [field: SerializeField] public AbilitySystemBehaviour AbilitySystem { get; private set; }
         [field: SerializeField] public AttributeSystemBehaviour AttributeSystem { get; private set; }
         [field: SerializeField] public EffectSystemBehaviour GameplayEffectSystem { get; private set; }
+        [field: SerializeField] public GameplayCueManager CueManager { get; private set; }
+
 
         [SerializeField] private bool _isInitOnAwake = true;
 
@@ -37,6 +42,7 @@ namespace H2V.GameplayAbilitySystem.Components
             if (!AbilitySystem) AbilitySystem = gameObject.GetComponent<AbilitySystemBehaviour>();
             if (!AttributeSystem) AttributeSystem = gameObject.GetComponent<AttributeSystemBehaviour>();
             if (!GameplayEffectSystem) GameplayEffectSystem = gameObject.GetComponent<EffectSystemBehaviour>();
+            if (!CueManager) CueManager = gameObject.GetComponent<GameplayCueManager>();
         }
 
         protected virtual void Awake()
@@ -51,16 +57,25 @@ namespace H2V.GameplayAbilitySystem.Components
         public virtual void Init()
         {
             AttributeSystem.Init();
+            CueManager?.Init(this);
             GameplayEffectSystem.Owner = this;
             InitChildComponents();
         }
-        
+
         private void InitChildComponents()
         {
             var childComponents = GetComponentsInChildren<IOwnerComponent>();
             foreach (var childComponent in childComponents)
             {
-                childComponent.Init(this);
+                if (childComponent is GameplayCueBootstrapper bootstrapper)
+                {
+                    if (CueManager != null)
+                        bootstrapper.Init(this);
+                }
+                else
+                {
+                    childComponent.Init(this);
+                }
             }
         }
 

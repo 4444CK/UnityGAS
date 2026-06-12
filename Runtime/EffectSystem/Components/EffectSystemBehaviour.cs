@@ -2,6 +2,9 @@ using System.Collections.Generic;
 using System.Linq;
 using H2V.GameplayAbilitySystem.AttributeSystem.Components;
 using H2V.GameplayAbilitySystem.Components;
+using H2V.GameplayAbilitySystem.CueSystem;
+using H2V.GameplayAbilitySystem.EffectSystem.GamplayEffectPolicies;
+using H2V.GameplayAbilitySystem.EffectSystem.ScriptableObjects;
 using H2V.GameplayAbilitySystem.TagSystem.ScriptableObjects;
 using IndiGames.GameplayAbilitySystem.EffectSystem.Components;
 using UnityEngine;
@@ -51,6 +54,22 @@ namespace H2V.GameplayAbilitySystem.EffectSystem.Components
         {
             _appliedEffects.Add(activeEffect);
             UpdateAttributeSystemModifiers();
+
+            var cueManager = GetCueManager();
+            var effectDef = activeEffect.Spec.EffectDef as GameplayEffectSO;
+            if (cueManager != null && effectDef != null)
+            {
+                var parameters = GameplayCueParameters.FromEffect(activeEffect.Spec, Owner);
+
+                if (effectDef.CueOnApply?.AssociatedTag != null)
+                    cueManager.ExecuteCue(effectDef.CueOnApply.AssociatedTag, parameters);
+
+                if (effectDef.CueOnActive?.AssociatedTag != null &&
+                    (effectDef.Policy is DurationalPolicy or InfinitePolicy))
+                {
+                    cueManager.AddActiveCue(effectDef.CueOnActive.AssociatedTag, activeEffect, parameters);
+                }
+            }
 
             var spec = activeEffect.Spec;
             var instigator = spec.ContextHandle.InstigatorAbilitySystem;
@@ -170,9 +189,23 @@ namespace H2V.GameplayAbilitySystem.EffectSystem.Components
             var effect = _appliedEffects[index];
             if (!effect.CanRemoveFrom(this)) return;
 
+            var cueManager = GetCueManager();
+            var effectDef = effect.Spec.EffectDef as GameplayEffectSO;
+            if (cueManager != null && effectDef != null)
+            {
+                if (effectDef.CueOnActive?.AssociatedTag != null)
+                    cueManager.RemoveActiveCue(effect);
+
+                if (effectDef.CueOnRemove?.AssociatedTag != null)
+                {
+                    var parameters = new GameplayCueParameters { Location = Owner.transform.position };
+                    cueManager.ExecuteCue(effectDef.CueOnRemove.AssociatedTag, parameters);
+                }
+            }
+
             _appliedEffects.RemoveAt(index);
             if (effect?.Spec == null) return;
-            
+
             effect.OnRemovedFrom(this);
         }
 
@@ -201,6 +234,11 @@ namespace H2V.GameplayAbilitySystem.EffectSystem.Components
                 if (executeEvent == null) continue;
                 executeEvent.PostExecute(executeData);
             }
+        }
+
+        private GameplayCueManager GetCueManager()
+        {
+            return Owner?.GetComponent<GameplayCueManager>();
         }
     }
 }

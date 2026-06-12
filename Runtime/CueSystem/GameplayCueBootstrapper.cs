@@ -1,28 +1,24 @@
-using UnityEngine;
 using H2V.GameplayAbilitySystem.Components;
+using UnityEngine;
 
 namespace H2V.GameplayAbilitySystem.CueSystem
 {
     public class GameplayCueBootstrapper : MonoBehaviour, IOwnerComponent
     {
         [SerializeField] private IGameplayCue[] _cuesToRegister;
-        
+
         public void Init(AbilitySystemComponent asc)
         {
             var cueManager = asc.GetComponent<GameplayCueManager>();
             if (cueManager == null) return;
-            
-            if (_cuesToRegister != null)
+
+            if (_cuesToRegister == null) return;
+
+            foreach (var cue in _cuesToRegister)
             {
-                foreach (var cue in _cuesToRegister)
+                if (cue != null)
                     cueManager.RegisterCue(cue);
             }
-        }
-        
-        private void OnValidate()
-        {
-            if (_cuesToRegister != null && _cuesToRegister.Length > 0) return;
-            _cuesToRegister = Resources.LoadAll<IGameplayCue>("GameplayCues");
         }
     }
 }

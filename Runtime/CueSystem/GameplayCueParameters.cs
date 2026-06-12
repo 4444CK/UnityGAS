@@ -1,5 +1,6 @@
 using UnityEngine;
 using H2V.GameplayAbilitySystem.Components;
+using H2V.GameplayAbilitySystem.EffectSystem;
 
 namespace H2V.GameplayAbilitySystem.CueSystem
 {

@@ -4,6 +4,7 @@ using H2V.GameplayAbilitySystem.EffectSystem.AdditionApplyEffects;
 using H2V.GameplayAbilitySystem.EffectSystem.EffectConditions;
 using H2V.GameplayAbilitySystem.EffectSystem.GamplayEffectPolicies;
 using H2V.GameplayAbilitySystem.TagSystem.ScriptableObjects;
+using H2V.GameplayAbilitySystem.CueSystem;
 using UnityEngine;
 
 namespace H2V.GameplayAbilitySystem.EffectSystem.ScriptableObjects
@@ -44,6 +45,16 @@ namespace H2V.GameplayAbilitySystem.EffectSystem.ScriptableObjects
 
         [field: SerializeReference, SubclassSelector, Tooltip("Custom requirement to know if we can apply effect or not")]
         public IEffectCondition[] ApplicationConditions { get; private set; } = Array.Empty<IEffectCondition>();
+
+        [Header("Gameplay Cues")]
+        [field: SerializeField, Tooltip("Played when effect is applied (Instant)")]
+        public GameplayCueTagSO CueOnApply { get; private set; }
+
+        [field: SerializeField, Tooltip("Played while effect is active (Duration/Infinite)")]
+        public GameplayCueTagSO CueOnActive { get; private set; }
+
+        [field: SerializeField, Tooltip("Played when effect is removed")]
+        public GameplayCueTagSO CueOnRemove { get; private set; }
 
         /// <summary>
         /// Create a new Specification from this Definition
